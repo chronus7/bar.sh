@@ -3,6 +3,8 @@
 
 > i3 status_command script
 
+![Screenshot](screenshot.png)
+
 This script provides a (theoratically shell agnostic) way
 to retrieve system information and provide them for i3wm's
 status bar.
