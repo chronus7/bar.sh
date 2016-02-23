@@ -18,7 +18,7 @@
 #
 # Do whatever you want, but please remember to mention me as
 # the original author.
-# -- Dave J (https://github.com/DaveAtGit)
+# -- Dave J (https://github.com/chronus7)
 
 # -- colours
 
