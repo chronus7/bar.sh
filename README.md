@@ -41,16 +41,15 @@ for the following:
 
 | Module          | Benefit                            |
 | --------------- | ---------------------------------- |
-| `wlan`          | Is your wlan interface up?         |
-| `wlan_ext`      | Also knows, if it is connected     |
-| `vpn`           | Is an VPN up?                      |
+| `wlan <iface>`  | Is your WLAN interface up?         |
+| `vpn`           | Is the VPN up?                     |
 | `disk <dir>`    | Don't download that much...        |
 | `memory`        | Browsers and their RAM.            |
 | `cpu`           | The heat isn't indicator enough?   |
 | `brightness`    | What does `xbacklight` know?       |
 | `layout`        | [`xkblayout-state`](https://github.com/nonpop/xkblayout-state) ftw |
-| `leds`          | Which keys did you lock again?     |
-| `volume`        | Did you forgot to unmute it again? |
+| `leds`          | EVERYTHING IS WRONG11!             |
+| `volume`        | Sound? What's that?                |
 | `battery <num>` | Need to recharge again?            |
 | `clock`         | On time.                           |
 
