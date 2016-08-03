@@ -136,6 +136,7 @@ function battery() { #{{{
     percentage=$(echo $charge_now $charge_full | awk '{ print $1 / $2 * 100 }')
     perc=${percentage/.*/}
 
+    # TODO remaining time?
     case $status in
         Dis*)
             #status="DIS"
@@ -221,7 +222,14 @@ function cpu() { #{{{
     # Prints the current CPU-load
     # /proc/stat: user,nice,system,idle,iowait,irq,softirq,steal,guest,guest_nice
     # ( user + system ) / ( user + system + idle ) * 100
-    awk '/cpu /{ printf "CPU %4.1f%%", ($2+$4)/($2+$4+$5)*100}' /proc/stat
+    local tmp_file='/tmp/barsh.cpu.tmp'
+    local line="$(awk '/cpu /{ print $0 }' /proc/stat)"
+    local input="$(< $tmp_file)
+$line"  # newlines are a pia
+    [ -f "$tmp_file" ] && awk '/prev_cpu /{ p2=$2; p4=$4; p5=$5 }\
+        /^cpu /{ printf "CPU %4.1f%%", \
+        ($2-p2 + $4-p4)/($2-p2 + $4-p4 + $5-p5)*100 }' <<< "$input"
+    awk '/cpu /{ printf "prev_%s\n", $0 }' <<< "$line" > $tmp_file
 } #}}}
 
 function memory() { #{{{
@@ -253,6 +261,7 @@ function wlan() { #{{{
         *)              # everything else (e.g. down)
             return 1;;
     esac
+    # TODO actually running: ps -ef | grep -v grep | grep dhcpcd
 } #}}}
 
 function vpn() { #{{{
