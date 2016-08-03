@@ -257,11 +257,15 @@ function wlan() { #{{{
             echo -n " (no-carrier)"
             return 1;;
         *UP*)           # up and it seems to work
-            return 0;;
+            if [ -z "$(ps -ef | grep -v grep | grep dhcpcd)" ]; then
+                echo -n " (no dhcpcd)"
+                return 1
+            else
+                return 0
+            fi;;
         *)              # everything else (e.g. down)
             return 1;;
     esac
-    # TODO actually running: ps -ef | grep -v grep | grep dhcpcd
 } #}}}
 
 function vpn() { #{{{
