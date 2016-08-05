@@ -222,7 +222,7 @@ function cpu() { #{{{
     # Prints the current CPU-load
     # /proc/stat: user,nice,system,idle,iowait,irq,softirq,steal,guest,guest_nice
     # ( user + system ) / ( user + system + idle ) * 100
-    local tmp_file='/tmp/barsh.cpu.tmp'
+    local tmp_file='/tmp/barsh.cpu.tmp'     # TODO make variable?
     local line="$(awk '/cpu /{ print $0 }' /proc/stat)"
     local input="$(< $tmp_file)
 $line"  # newlines are a pia

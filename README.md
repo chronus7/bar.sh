@@ -41,7 +41,7 @@ for the following:
 
 | Module          | Benefit                            |
 | --------------- | ---------------------------------- |
-| `wlan <iface>`  | Is your WLAN interface up?         |
+| `wlan <iface>`  | No need for `ping google.com`.     |
 | `vpn`           | Is the VPN up?                     |
 | `disk <dir>`    | Don't download that much...        |
 | `memory`        | Browsers and their RAM.            |
@@ -56,6 +56,14 @@ for the following:
 Each module produces its own text, while the colour depends
 on the functions return-value. The colours can be changed as
 documented in `jsonfy`.
+
+
+## Drawbacks
+
+Currently the script requires read/write access to
+`/tmp/barsh.cpu.tmp` for the CPU-load calculations. The
+filepath can be adjusted. Maybe I will fix this at some
+point...
 
 ----------
 
