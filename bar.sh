@@ -1,6 +1,7 @@
 #!/bin/env sh
 # -*- coding: utf-8 -*-
 # vim: ft=sh:tw=80:foldmethod=marker
+# shellcheck disable=SC2046
 
 # -- bar.sh {{{
 # i3 status_command script
@@ -60,7 +61,7 @@ USG
 # --| }}}
 
 # --/ FUNCTIONS
-function read_Xresources() { #{{{
+read_Xresources() { #{{{
     # TODO asking the X-server itself would be better, as
     #      one could load the colours in different ways...
     f=~/.Xresources
@@ -79,12 +80,12 @@ function read_Xresources() { #{{{
     fi
 } #}}}
 
-function color_S() { echo -n $_green; }
-function color_E() { echo -n $_red; }
-function color_A() { echo -n $_yellow; }
-function color_N() { echo -n $_white; }
+color_S() { echo -n $_green; }
+color_E() { echo -n $_red; }
+color_A() { echo -n $_yellow; }
+color_N() { echo -n $_white; }
 
-function joinStrings() { #{{{
+joinStrings() { #{{{
     # joinStrings <sep> <items ...>
     # source: http://stackoverflow.com/a/17841619/2395605
     local IFS="$1"
@@ -92,14 +93,13 @@ function joinStrings() { #{{{
     echo -n "$*"
 } #}}}
 
-function jsonfy() { #{{{
+jsonfy() { #{{{
     # jsonfy <func> [<color_S> [<color_E]]
     func="$1"
     col_S=${2:-$(color_S)}
     col_E=${3:-$(color_E)}
     color=$col_E
 
-    res_code=0
     output=$($func)
 
     if [ $? -eq 0 ]; then
@@ -110,7 +110,7 @@ function jsonfy() { #{{{
 } #}}}
 
 # --/ MODULES
-function clock() { #{{{
+clock() { #{{{
     # clock [<format>]
     # Prints the current time
     fmt="$*"
@@ -118,21 +118,21 @@ function clock() { #{{{
     date +"${fmt}"
 } #}}}
 
-function battery() { #{{{
+battery() { #{{{
     # battery <num>
     # Prints the battery status of the given battery
     path="/sys/class/power_supply/BAT$1/"
-    if [ ! -d $path ]; then
+    if [ ! -d "$path" ]; then
         echo -n "↯   AC"
         return 0
     fi
-    status=$(cat $path/status)
+    status=$(cat "$path/status")
     chrg="charge"
     if [ ! -f $path/${chrg}_full ]; then
         chrg="energy"
     fi
-    charge_full=$(cat $path/${chrg}_full)
-    charge_now=$(cat $path/${chrg}_now)
+    charge_full=$(cat "$path/${chrg}_full")
+    charge_now=$(cat "$path/${chrg}_now")
     percentage=$(echo $charge_now $charge_full | awk '{ print $1 / $2 * 100 }')
     perc=${percentage/.*/}
 
@@ -166,16 +166,15 @@ function battery() { #{{{
     return $returnval
 } #}}}
 
-function volume() { #{{{
+volume() { #{{{
     # Prints the current status of master-volume (requires amixer)
     output=$(amixer get Master | grep -E "^\s+Mono")
-    offset=0
     if [ -z "$output" ]; then   # fix for different setup
         output=$(amixer get Master | grep -E "^\s+Front Left")
     fi
 
-    percentage=$(cut -d' ' -f$((4 + $offset)) <<< $output | tr -d '[]')
-    state=$(cut -d' ' -f$((6 + $offset)) <<< $output | tr -d '[]')
+    percentage=$(awk -v RS=' ' '/%]$/{print $0}' <<< $output | tr -d '[]')
+    state=$(awk '{print $NF}' <<< $output | tr -d '[]')
     case $state in
         on)
             echo -n "V $percentage"
@@ -186,7 +185,7 @@ function volume() { #{{{
     esac
 } #}}}
 
-function leds() { #{{{
+leds() { #{{{
     # Prints the status of the keyboard-LEDs (requires xset)
     type xset &>/dev/null || { echo -n "xset required"; return 1; }
 
@@ -202,7 +201,7 @@ function leds() { #{{{
     return $?
 } #}}}
 
-function layout() { #{{{
+layout() { #{{{
     # Prints the keyboard-layout (requires xkblayout-state)
     type xkblayout-state &>/dev/null ||\
         { echo -n "xkblayout-state required"; return 1; }
@@ -213,18 +212,20 @@ function layout() { #{{{
     return $?
 } #}}}
 
-function brightness() { #{{{
-    # Prints the screen-brightness (requires xbacklight)
-    printf "BRI %4.1f%%" $(xbacklight)
+brightness() { #{{{
+    # Prints the screen-brightness
+    cur=$(cat /sys/class/backlight/*/brightness)
+    max=$(cat /sys/class/backlight/*/max_brightness)
+    printf "BRI %4.1f%%" $(( cur * 100 / max ))
 } #}}}
 
-function cpu() { #{{{
+cpu() { #{{{
     # Prints the current CPU-load
     # /proc/stat: user,nice,system,idle,iowait,irq,softirq,steal,guest,guest_nice
     # ( user + system ) / ( user + system + idle ) * 100
-    local tmp_file='/tmp/barsh.cpu.tmp'     # TODO make variable?
-    local line="$(awk '/cpu /{ print $0 }' /proc/stat)"
-    local input="$(< $tmp_file)
+    tmp_file='/tmp/barsh.cpu.tmp'     # TODO make variable?
+    line="$(awk '/cpu /{ print $0 }' /proc/stat)"
+    input="$(< $tmp_file)
 $line"  # newlines are a pia
     [ -f "$tmp_file" ] && awk '/prev_cpu /{ p2=$2; p4=$4; p5=$5 }\
         /^cpu /{ printf "CPU %4.1f%%", \
@@ -232,23 +233,31 @@ $line"  # newlines are a pia
     awk '/cpu /{ printf "prev_%s\n", $0 }' <<< "$line" > $tmp_file
 } #}}}
 
-function memory() { #{{{
+temperature() { #{{{
+    # temperature <chip>
+    # Uses lm_sensors to retrieve info (heavily output reliant)
+    res="$(sensors -A "$1" | head -n2 | tail -n1 \
+        | awk -v RS=' ' '/^+/{print;exit}')"
+    printf "%s" "${res:1}"
+} #}}}
+
+memory() { #{{{
     # Prints the current (active) memory usage
     awk '/MemTotal/{t=$2}/Active:/{a=$2}END{printf "MEM %4.1f%%", a/t*100}' /proc/meminfo
 } #}}}
 
-function disk() { #{{{
+disk() { #{{{
     # disk <disk-path> [<path-string-padding>]
     # Prints the disk-usage of the given disk
     res="$(df -h "$1" | awk '/\/dev/{printf "%5.1f/%3d", $3, $2 }' | sed s/G//g)"
     printf "%-${2:-0}s %9sGiB" "$1" "$res"
 } #}}}
 
-function wlan() { #{{{
+wlan() { #{{{
     # wlan <interface>
     # Displays the status of the given WLAN-interface.
     i="$1"; echo -n "$i"
-    info=$(ip link show $i | head -n1 | cut -d' ' -f3)
+    info=$(ip link show "$i" | head -n1 | cut -d' ' -f3)
     case "$info" in
         "")             # interface not found
             echo -n " (not found)"
@@ -257,32 +266,57 @@ function wlan() { #{{{
             echo -n " (no-carrier)"
             return 1;;
         *UP*)           # up and it seems to work
-            if [ -z "$(ps -ef | grep -v grep | grep dhcpcd)" ]; then
+            # TODO still missing an option here :(
+            # `dhcpcd -U "$1"` may help
+            if pgrep dhcpcd 1>/dev/null; then
+                if type iwconfig &>/dev/null; then
+                    iwconfig "$i" | head -n1 \
+                        | awk -v RS='  ' -F':' '/^ESSID/{printf " (%s", $2}' \
+                        | sed 's/"//g'
+                    iwconfig "$i" | awk -F= '/^\s+Link Quality/{print $2}' \
+                        | cut -d' ' -f1 \
+                        | awk -F/ '{printf " ─ %.2f%%)", $1 / $2 * 100}'
+                fi
+                return 0
+            else
                 echo -n " (no dhcpcd)"
                 return 1
-            else
-                return 0
             fi;;
         *)              # everything else (e.g. down)
             return 1;;
     esac
 } #}}}
 
-function vpn() { #{{{
+vpn() { #{{{
     # Shows, whether a VPN-connection is established
     echo -n "VPN"
-    [ -n "$(ip addr show | grep ppp0)" ]
+    ip addr show | grep -q ppp0
+    return $?
+} #}}}
+
+music() { #{{{
+    # Shows mpd song info
+    if pgrep mpd >/dev/null; then
+        mpc -f '[%title%[[ \[[%artist%|%albumartist%]\]] %album%]]|[%file%]' current\
+            | sed 's/"/\\"/g' | head -c-1
+        mpc status | tail -n1 | sed 's/\s\s\+/\n/g' \
+            | awk '/repeat: on/{r="r"}/single: on/{s="s"}/consume: on/{c="c"}END{printf " {%s%s%s}", r, s, c}' \
+            | awk '!/^ \{\}$/{print}'
+        mpc status | head -n2 | tail -n1 | grep 'playing' >/dev/null
+    fi
     return $?
 } #}}}
 
 # --/ MAIN
-function loop() {
+loop() {
     echo -n '['
     joinStrings , \
+        "$(jsonfy music $(color_A))"\
         "$(jsonfy "wlan wlp3s0")"\
         "$(jsonfy "disk /" $(color_N))"\
         "$(jsonfy "disk /home" $(color_N))"\
         "$(jsonfy memory)"\
+        "$(jsonfy "temperature coretemp-isa-0000" $(color_N))"\
         "$(jsonfy cpu $(color_N))"\
         "$(jsonfy brightness $(color_N))"\
         "$(jsonfy layout $(color_N))"\
@@ -294,7 +328,7 @@ function loop() {
     echo '],'
 }
 
-function main() { #{{{
+main() { #{{{
     echo '{"click_events": false, "version": 1}'
     echo '['
 

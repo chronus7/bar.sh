@@ -30,7 +30,7 @@ overrides)
   test this)
 - handcrafted for my system
   (Arch Linux, minimalistic, Lenovo T450s)
-- does not seem to need to much resources
+- does not seem to need too much resources
 
 
 ## Modules
@@ -41,12 +41,14 @@ for the following:
 
 | Module          | Benefit                            |
 | --------------- | ---------------------------------- |
+| `music`         | Which tunes again?                 |
 | `wlan <iface>`  | No need for `ping google.com`.     |
 | `vpn`           | Is the VPN up?                     |
 | `disk <dir>`    | Don't download that much...        |
 | `memory`        | Browsers and their RAM.            |
+| `temperature`   | Admit it: you can hear the fan...  |
 | `cpu`           | The heat isn't indicator enough?   |
-| `brightness`    | What does `xbacklight` know?       |
+| `brightness`    | `xbacklight` was yesterday         |
 | `layout`        | [`xkblayout-state`](https://github.com/nonpop/xkblayout-state) ftw |
 | `leds`          | EVERYTHING IS WRONG11!             |
 | `volume`        | Sound? What's that?                |
@@ -65,10 +67,22 @@ Currently the script requires read/write access to
 filepath can be adjusted. Maybe I will fix this at some
 point...
 
+This uses probably many PIDs. Which should not matter, as
+they are available right after, but maybe you got a more
+fragile system.
+
+## Shell compatibility
+
+Turns out, this script is not as POSIX compliant as
+intended. I will try to sort this out eventually...
+
 ----------
 
 Do whatever you want, but please remember to mention me as
-the original author.
+the original author (should probably be a GPL or MIT).
 
 > Dave J (https://github.com/chronus7)
 
+<!--
+vim: ft=markdown:tw=60
+-->
